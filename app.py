@@ -1,4 +1,4 @@
-"""OmniChat AI - Modern Multimodal AI Chatbot with Artifact Canvas, Battle Mode & Free Model Radar."""
+"""OmniChat - Split-Screen Workspace with Model Battle, Artifact Canvas & Free Model Scanner."""
 import streamlit as st
 import time
 import json
@@ -11,18 +11,18 @@ from src.quiz_generator import render_interactive_quiz
 from src.ai_engine import stream_ai_response
 from src.model_scanner import scan_free_models
 
-# 1. Page Configuration
+# Page Configuration
 st.set_page_config(
-    page_title="OmniChat AI — Intelligent Assistant",
-    page_icon="⚡",
+    page_title="OmniChat",
+    page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 2. Inject Figma Design Tokens & CSS
+# Custom Styling
 inject_design_tokens()
 
-# 3. Session State Initialization
+# Session State
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "battle_messages" not in st.session_state:
@@ -40,28 +40,26 @@ if "last_latency" not in st.session_state:
 if "discovered_free_models" not in st.session_state:
     st.session_state.discovered_free_models = scan_free_models()
 if "app_mode" not in st.session_state:
-    st.session_state.app_mode = "Chat"  # "Chat" or "Battle"
+    st.session_state.app_mode = "Chat"
 if "battle_votes" not in st.session_state:
     st.session_state.battle_votes = {"Model A": 0, "Model B": 0, "Tie": 0}
 
-# 4. Sidebar Controls
+# Sidebar Controls
 with st.sidebar:
-    st.markdown("### ⚡ OmniChat Controls")
+    st.markdown("### Settings")
     
-    # App Mode Switcher
     st.session_state.app_mode = st.radio(
-        "Application Mode:",
-        ["Standard Chat 💬", "Model Battle / Compare ⚔️"],
+        "Mode:",
+        ["Standard Chat", "Model Battle & Compare"],
         index=0 if st.session_state.app_mode == "Chat" else 1
     )
     is_battle = "Battle" in st.session_state.app_mode
     
     st.divider()
 
-    # Free Models Radar Quick Action
-    st.markdown("### 📡 Free Models Radar")
-    st.caption(f"**{len(st.session_state.discovered_free_models)}** free zero-cost models discovered.")
-    if st.button("🔍 View / Rescan Free Models", use_container_width=True):
+    st.markdown("### Free Models Scanner")
+    st.caption(f"**{len(st.session_state.discovered_free_models)}** free models detected on open endpoints.")
+    if st.button("Scan / View Free Models", use_container_width=True):
         st.session_state.discovered_free_models = scan_free_models()
         st.session_state.show_scanner = not st.session_state.show_scanner
         st.rerun()
@@ -69,45 +67,42 @@ with st.sidebar:
     st.divider()
 
     if not is_battle:
-        # Standard Single-Model Mode
-        st.markdown("### 🧠 AI Model Provider")
+        st.markdown("### Model Selection")
         provider_options = list(AVAILABLE_MODELS.keys())
         selected_provider = st.selectbox(
-            "Primary Provider:",
+            "Provider:",
             options=provider_options,
-            format_func=lambda k: f"{AVAILABLE_MODELS[k]['icon']} {AVAILABLE_MODELS[k]['name']}",
+            format_func=lambda k: AVAILABLE_MODELS[k]["name"],
             index=0
         )
         
-        # API Key Input
         api_key = ""
         if selected_provider == "gemini":
             api_key = st.text_input("Gemini API Key:", value=GEMINI_API_KEY, type="password")
             if not api_key:
-                st.info("💡 Running in **Judge Sandbox Mode** (No key required).")
+                st.info("Running in Sandbox Mode (no key needed).")
         elif selected_provider == "nous":
             api_key = st.text_input("Nous Portal API Key:", value=NOUS_API_KEY, type="password")
             if not api_key:
-                st.info("💡 Running in **Nous Hermes Sandbox Synthesis**.")
+                st.info("Running in Nous Hermes Sandbox.")
         elif selected_provider == "groq":
             api_key = st.text_input("Groq API Key:", value=GROQ_API_KEY, type="password")
             if not api_key:
-                st.info("💡 Running in **Judge Sandbox Mode**.")
+                st.info("Running in Sandbox Mode.")
         else:
-            st.success("✅ **Sandbox Active**: Zero API key required.")
+            st.success("Sandbox active: evaluate without an API key.")
     else:
-        # Battle Mode Controls
-        st.markdown("### ⚔️ Battle Contenders")
+        st.markdown("### Battle Setup")
         model_a_provider = st.selectbox(
-            "Model A (Challenger 1):",
+            "Model A:",
             ["gemini", "groq", "sandbox"],
-            format_func=lambda k: f"{AVAILABLE_MODELS[k]['icon']} {AVAILABLE_MODELS[k]['name']}",
+            format_func=lambda k: AVAILABLE_MODELS[k]["name"],
             index=0
         )
         
         free_model_names = [f"{m['name']} ({m['id']})" for m in st.session_state.discovered_free_models]
         selected_free_choice = st.selectbox(
-            "Model B (Challenger 2 - Free Model Radar):",
+            "Model B (Discovered Free Model):",
             free_model_names,
             index=0
         )
@@ -117,50 +112,47 @@ with st.sidebar:
 
     st.divider()
 
-    # Persona Selector
-    st.markdown("### 🎭 Persona & Role")
+    st.markdown("### Persona")
     persona_keys = list(PERSONAS.keys())
     selected_persona_id = st.selectbox(
-        "Active Persona:",
+        "Active Role:",
         options=persona_keys,
-        format_func=lambda k: f"{PERSONAS[k]['icon']} {PERSONAS[k]['name']}",
+        format_func=lambda k: PERSONAS[k]["name"],
         index=0
     )
     current_persona = PERSONAS[selected_persona_id]
 
     st.divider()
 
-    # File Ingestion
-    st.markdown("### 📁 Context & Documents")
+    st.markdown("### Attach Files")
     uploaded_files = st.file_uploader(
-        "Attach Files (PDF, Code, Markdown, TXT):",
+        "Upload code, markdown, text, or PDF:",
         type=["pdf", "py", "js", "md", "txt", "csv", "json"],
         accept_multiple_files=True
     )
     if uploaded_files:
         st.session_state.uploaded_files_data = [parse_uploaded_file(f) for f in uploaded_files]
         total_tokens = sum(f["est_tokens"] for f in st.session_state.uploaded_files_data)
-        st.caption(f"📎 {len(uploaded_files)} file(s) attached (~{total_tokens:,} tokens)")
+        st.caption(f"{len(uploaded_files)} file(s) attached (~{total_tokens:,} tokens)")
     else:
         st.session_state.uploaded_files_data = []
 
     st.divider()
 
-    # Actions
-    if st.button("🗑️ Clear History", use_container_width=True):
+    if st.button("Clear History", use_container_width=True):
         st.session_state.messages = []
         st.session_state.battle_messages = []
         st.session_state.active_artifact = None
         st.rerun()
 
-# 5. Top Header Banner
-header_mode_badge = "⚔️ Model Battle Mode" if is_battle else f"● {AVAILABLE_MODELS[selected_provider]['badge']}"
+# Top Header
+header_mode_badge = "Battle Mode" if is_battle else AVAILABLE_MODELS[selected_provider]["badge"]
 st.markdown(f"""
 <div class="omni-header">
     <div>
-        <h1 class="omni-title">⚡ OmniChat AI</h1>
+        <h1 class="omni-title">OmniChat</h1>
         <p style="margin: 0.2rem 0 0 0; color: #94a3b8; font-size: 0.9rem;">
-            Devpost Challenge Edition • Multimodal Intelligence, Artifact Canvas & Free Model Radar
+            Model Battle, Artifact Canvas & Free Model Scanner
         </p>
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -168,34 +160,33 @@ st.markdown(f"""
             {header_mode_badge}
         </span>
         <span class="omni-badge">
-            {current_persona['icon']} {current_persona['name']}
+            {current_persona['name']}
         </span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 6. Top Action Row
+# Action Row
 col_head_left, col_head_right = st.columns([3, 1])
 with col_head_left:
     st.markdown("""
-    <span class="metric-pill">🎨 Figma Tokens</span>
-    <span class="metric-pill">⚔️ Battle Mode</span>
-    <span class="metric-pill">📡 Free Model Radar</span>
-    <span class="metric-pill">📊 Interactive Quiz</span>
+    <span class="metric-pill">Figma Design Tokens</span>
+    <span class="metric-pill">Model Battle</span>
+    <span class="metric-pill">Free Model Scanner</span>
+    <span class="metric-pill">Self-Grading Quiz</span>
     """, unsafe_allow_html=True)
 with col_head_right:
-    quiz_button_label = "❌ Close Quiz" if st.session_state.show_quiz else "🎯 Launch Quiz"
+    quiz_button_label = "Close Quiz" if st.session_state.show_quiz else "Launch Quiz"
     if st.button(quiz_button_label, use_container_width=True):
         st.session_state.show_quiz = not st.session_state.show_quiz
         st.rerun()
 
-# 7. Discovered Free Models Drawer (if opened)
+# Free Models Drawer
 if st.session_state.show_scanner:
     with st.container():
-        st.markdown("### 📡 Free Models Radar (Nous Portal & Open Endpoints)")
-        st.caption("Live zero-cost models automatically scanned and ready for comparison.")
+        st.markdown("### Discovered Free Models")
+        st.caption("Active zero-cost models scanned from open endpoints:")
         
-        # Display as an interactive cards table
         cols = st.columns(3)
         for i, m in enumerate(st.session_state.discovered_free_models[:9]):
             with cols[i % 3]:
@@ -203,18 +194,17 @@ if st.session_state.show_scanner:
                 <div class="omni-card" style="padding: 0.9rem; margin-bottom: 0.6rem;">
                     <strong style="color: #c4b5fd;">{m['name']}</strong><br/>
                     <code style="font-size: 0.75rem; color: #06b6d4;">{m['id']}</code><br/>
-                    <span style="font-size: 0.8rem; color: #94a3b8;">Context: {m['context_length']:,} tokens • {m['provider']}</span>
+                    <span style="font-size: 0.8rem; color: #94a3b8;">Context: {m['context_length']:,} tokens &bull; {m['provider']}</span>
                 </div>
                 """, unsafe_allow_html=True)
         st.divider()
 
-# 8. Interactive Quiz Drawer (if toggled)
+# Quiz Drawer
 if st.session_state.show_quiz:
     with st.container():
         render_interactive_quiz()
         st.divider()
 
-# Helper function to extract Mermaid or Code Artifacts
 def extract_artifact(text: str):
     mermaid_match = re.search(r"```mermaid\n(.*?)```", text, re.DOTALL)
     if mermaid_match:
@@ -225,43 +215,38 @@ def extract_artifact(text: str):
         return {"type": "code", "lang": lang, "content": code_match.group(2).strip()}
     return None
 
-# =====================================================================
-# BATTLE MODE vs STANDARD CHAT MODE
-# =====================================================================
+# Workspace View
 if is_battle:
-    st.markdown("### ⚔️ Model Battle Arena: Dual Response Comparison")
-    st.caption("Submit a prompt to stream answers from two distinct models simultaneously and evaluate their reasoning, speed, and formatting.")
+    st.markdown("### Model Comparison Arena")
+    st.caption("Submit a prompt to stream answers from both models in parallel:")
     
-    battle_input = st.chat_input("Enter a challenge prompt for both models to answer...")
+    battle_input = st.chat_input("Enter a prompt to compare both models...")
     
-    # Render past battle turns
     for b_turn in st.session_state.battle_messages:
-        st.markdown(f"**👤 Prompt:** {b_turn['prompt']}")
+        st.markdown(f"**Prompt:** {b_turn['prompt']}")
         col_res_a, col_res_b = st.columns(2)
         with col_res_a:
-            st.markdown(f"#### 🅰️ {b_turn['model_a_name']}")
-            st.markdown(f"<span class='metric-pill'>⏱️ {b_turn['latency_a']:.2f}s</span>", unsafe_allow_html=True)
+            st.markdown(f"#### {b_turn['model_a_name']}")
+            st.markdown(f"<span class='metric-pill'>Latency: {b_turn['latency_a']:.2f}s</span>", unsafe_allow_html=True)
             st.markdown(b_turn["response_a"])
         with col_res_b:
-            st.markdown(f"#### 🅱️ {b_turn['model_b_name']}")
-            st.markdown(f"<span class='metric-pill'>⏱️ {b_turn['latency_b']:.2f}s</span>", unsafe_allow_html=True)
+            st.markdown(f"#### {b_turn['model_b_name']}")
+            st.markdown(f"<span class='metric-pill'>Latency: {b_turn['latency_b']:.2f}s</span>", unsafe_allow_html=True)
             st.markdown(b_turn["response_b"])
         st.divider()
 
-    # Trigger New Battle
     if battle_input:
         context_str = format_context_for_prompt(st.session_state.uploaded_files_data)
         history = [{"role": "user", "content": battle_input}]
         
-        st.markdown(f"**👤 Prompt:** {battle_input}")
+        st.markdown(f"**Prompt:** {battle_input}")
         col_stream_a, col_stream_b = st.columns(2)
         
         model_a_display = AVAILABLE_MODELS.get(model_a_provider, {}).get("name", "Model A")
         model_b_display = selected_free_choice.split("(")[0].strip()
         
-        # Stream Model A
         with col_stream_a:
-            st.markdown(f"#### 🅰️ {model_a_display}")
+            st.markdown(f"#### {model_a_display}")
             holder_a = st.empty()
             text_a = ""
             t0_a = time.time()
@@ -270,11 +255,10 @@ if is_battle:
                 holder_a.markdown(text_a + " ▌")
             holder_a.markdown(text_a)
             lat_a = time.time() - t0_a
-            st.caption(f"⏱️ Finished in {lat_a:.2f}s")
+            st.caption(f"Completed in {lat_a:.2f}s")
             
-        # Stream Model B (Nous / Free Model)
         with col_stream_b:
-            st.markdown(f"#### 🅱️ {model_b_display}")
+            st.markdown(f"#### {model_b_display}")
             holder_b = st.empty()
             text_b = ""
             t0_b = time.time()
@@ -283,9 +267,8 @@ if is_battle:
                 holder_b.markdown(text_b + " ▌")
             holder_b.markdown(text_b)
             lat_b = time.time() - t0_b
-            st.caption(f"⏱️ Finished in {lat_b:.2f}s")
+            st.caption(f"Completed in {lat_b:.2f}s")
             
-        # Record Battle
         st.session_state.battle_messages.append({
             "prompt": battle_input,
             "model_a_name": model_a_display,
@@ -296,80 +279,75 @@ if is_battle:
             "latency_b": lat_b
         })
         
-        # Voting Row
-        st.markdown("##### 🏆 Judge Vote:")
+        st.markdown("##### Vote:")
         col_v1, col_v2, col_v3 = st.columns(3)
         with col_v1:
-            if st.button("👈 Model A was better"):
+            if st.button("Model A was better"):
                 st.session_state.battle_votes["Model A"] += 1
-                st.success("Vote recorded for Model A!")
+                st.success("Vote recorded.")
         with col_v2:
-            if st.button("👉 Model B was better"):
+            if st.button("Model B was better"):
                 st.session_state.battle_votes["Model B"] += 1
-                st.success("Vote recorded for Model B!")
+                st.success("Vote recorded.")
         with col_v3:
-            if st.button("🤝 It's a Tie"):
+            if st.button("Equal / Tie"):
                 st.session_state.battle_votes["Tie"] += 1
-                st.info("Vote recorded as Tie!")
+                st.info("Vote recorded.")
         st.rerun()
 
 else:
-    # --- STANDARD CHAT & ARTIFACT CANVAS MODE ---
     col_chat, col_canvas = st.columns([1.15, 0.85], gap="medium")
 
-    # RIGHT COLUMN: ARTIFACT CANVAS
+    # Artifact Canvas
     with col_canvas:
-        st.markdown("### 🎨 Artifact Canvas & Inspector")
-        st.caption("Live code inspector, system architecture diagrams, and generated deliverables.")
+        st.markdown("### Artifact Canvas")
+        st.caption("Extracted code blocks and system diagrams appear here:")
         
         artifact = st.session_state.active_artifact
         if artifact:
             if artifact["type"] == "mermaid":
-                st.markdown("#### 🗺️ Architecture / System Diagram")
+                st.markdown("#### System Diagram")
                 st.markdown(f"```mermaid\n{artifact['content']}\n```")
-                st.download_button("📥 Download Mermaid Code", data=artifact["content"], file_name="diagram.mmd", use_container_width=True)
+                st.download_button("Download Mermaid File", data=artifact["content"], file_name="diagram.mmd", use_container_width=True)
             elif artifact["type"] == "code":
-                st.markdown(f"#### 💻 Generated Code ({artifact.get('lang', 'text')})")
+                st.markdown(f"#### Code ({artifact.get('lang', 'text')})")
                 st.code(artifact["content"], language=artifact.get("lang", "text"))
-                st.download_button("📥 Download Code File", data=artifact["content"], file_name=f"artifact.{artifact.get('lang', 'txt')}", use_container_width=True)
+                st.download_button("Download Code File", data=artifact["content"], file_name=f"artifact.{artifact.get('lang', 'txt')}", use_container_width=True)
         else:
-            st.info("💡 As you chat, generated code snippets, diagrams, and structured notes will automatically populate this interactive Canvas.")
-            st.markdown("##### 🔍 Preview Capabilities:")
+            st.info("Generated code and system diagrams will automatically render here as you chat.")
             sample_mermaid = """flowchart TD
-    Client[Client App] --> API[FastAPI / Gemini]
-    API --> Canvas[Live Artifact Canvas]
-    API --> Quiz[Dynamic Quiz Engine]"""
+    Client[Web Client] --> API[FastAPI / Gemini]
+    API --> Canvas[Artifact Canvas]
+    API --> Quiz[Quiz Engine]"""
             st.markdown(f"```mermaid\n{sample_mermaid}\n```")
 
-    # LEFT COLUMN: CHAT INTERFACE
+    # Chat Thread
     with col_chat:
         if not st.session_state.messages:
-            st.markdown("#### 💡 Quick Starter Prompts")
+            st.markdown("#### Sample Prompts")
             chip1, chip2 = st.columns(2)
             with chip1:
-                if st.button("💻 Architect: Monolith vs Microservices", use_container_width=True):
+                if st.button("Monolith vs Microservices Architecture", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Explain Microservices vs Modular Monolith with an architectural Mermaid diagram."})
                     st.rerun()
-                if st.button("🎓 Study: Quantum Entanglement simply", use_container_width=True):
+                if st.button("Explain Quantum Entanglement simply", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Explain Quantum Entanglement simply with analogies and check-in questions."})
                     st.rerun()
             with chip2:
-                if st.button("⚡ Exec Brief: Project ROI Matrix", use_container_width=True):
+                if st.button("Executive Project Briefing", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Provide an executive briefing and readiness matrix for this AI application."})
                     st.rerun()
-                if st.button("🎯 Test: 4-Question Interactive Quiz", use_container_width=True):
+                if st.button("Launch Interactive Quiz", use_container_width=True):
                     st.session_state.show_quiz = True
                     st.rerun()
             st.divider()
 
-        # Render Chat History
         for msg in st.session_state.messages:
             role = msg["role"]
-            avatar = "👤" if role == "user" else current_persona["icon"]
-            with st.chat_message(role, avatar=avatar):
+            with st.chat_message(role):
                 st.markdown(msg["content"])
 
-        user_input = st.chat_input("Ask OmniChat AI anything or type a prompt...")
+        user_input = st.chat_input("Type your message here...")
         
         trigger_response = False
         if user_input:
@@ -382,7 +360,7 @@ else:
             latest_user_msg = st.session_state.messages[-1]["content"]
             context_str = format_context_for_prompt(st.session_state.uploaded_files_data)
             
-            with st.chat_message("assistant", avatar=current_persona["icon"]):
+            with st.chat_message("assistant"):
                 response_placeholder = st.empty()
                 full_response = ""
                 start_time = time.time()
