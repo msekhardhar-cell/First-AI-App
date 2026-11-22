@@ -10,6 +10,8 @@ from src.file_parser import parse_uploaded_file, format_context_for_prompt
 from src.quiz_generator import render_interactive_quiz
 from src.ai_engine import stream_ai_response
 from src.model_scanner import scan_free_models
+from src.mermaid_renderer import render_mermaid_svg
+from src.code_runner import execute_python_code
 
 # Page Configuration
 st.set_page_config(
@@ -35,6 +37,8 @@ if "show_scanner" not in st.session_state:
     st.session_state.show_scanner = False
 if "active_artifact" not in st.session_state:
     st.session_state.active_artifact = None
+if "code_run_result" not in st.session_state:
+    st.session_state.code_run_result = None
 if "last_latency" not in st.session_state:
     st.session_state.last_latency = 0.0
 if "discovered_free_models" not in st.session_state:
@@ -143,6 +147,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.battle_messages = []
         st.session_state.active_artifact = None
+        st.session_state.code_run_result = None
         st.rerun()
 
 # Top Header
@@ -192,8 +197,8 @@ if st.session_state.show_scanner:
             with cols[i % 3]:
                 st.markdown(f"""
                 <div class="omni-card" style="padding: 0.9rem; margin-bottom: 0.6rem;">
-                    <strong style="color: #c4b5fd;">{m['name']}</strong><br/>
-                    <code style="font-size: 0.75rem; color: #06b6d4;">{m['id']}</code><br/>
+                    <strong style="color: #65dbd0;">{m['name']}</strong><br/>
+                    <code style="font-size: 0.75rem; color: #9bb3c7;">{m['id']}</code><br/>
                     <span style="font-size: 0.8rem; color: #94a3b8;">Context: {m['context_length']:,} tokens &bull; {m['provider']}</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -306,20 +311,41 @@ else:
         artifact = st.session_state.active_artifact
         if artifact:
             if artifact["type"] == "mermaid":
-                st.markdown("#### System Diagram")
-                st.markdown(f"```mermaid\n{artifact['content']}\n```")
+                st.markdown("#### System Diagram (Interactive Visualizer)")
+                # Interactive SVG rendering
+                render_mermaid_svg(artifact["content"], height=320)
                 st.download_button("Download Mermaid File", data=artifact["content"], file_name="diagram.mmd", use_container_width=True)
             elif artifact["type"] == "code":
                 st.markdown(f"#### Code ({artifact.get('lang', 'text')})")
                 st.code(artifact["content"], language=artifact.get("lang", "text"))
-                st.download_button("Download Code File", data=artifact["content"], file_name=f"artifact.{artifact.get('lang', 'txt')}", use_container_width=True)
+                
+                col_c1, col_c2 = st.columns(2)
+                with col_c1:
+                    st.download_button("Download Code File", data=artifact["content"], file_name=f"artifact.{artifact.get('lang', 'txt')}", use_container_width=True)
+                with col_c2:
+                    if artifact.get("lang") in ["python", "py"]:
+                        if st.button("Run Code", use_container_width=True):
+                            res = execute_python_code(artifact["content"])
+                            st.session_state.code_run_result = res
+                            st.rerun()
+                
+                # Show Code Execution Result if active
+                if st.session_state.code_run_result:
+                    res = st.session_state.code_run_result
+                    st.markdown("##### Execution Terminal Output:")
+                    if res["success"]:
+                        st.success("Process exited with code 0")
+                        st.code(res["stdout"] if res["stdout"] else "[Process finished with no output]")
+                    else:
+                        st.error(f"Execution Error (Exit {res['returncode']}):")
+                        st.code(res["stderr"])
         else:
             st.info("Generated code and system diagrams will automatically render here as you chat.")
             sample_mermaid = """flowchart TD
     Client[Web Client] --> API[FastAPI / Gemini]
     API --> Canvas[Artifact Canvas]
     API --> Quiz[Quiz Engine]"""
-            st.markdown(f"```mermaid\n{sample_mermaid}\n```")
+            render_mermaid_svg(sample_mermaid, height=220)
 
     # Chat Thread
     with col_chat:
@@ -385,4 +411,5 @@ else:
             new_artifact = extract_artifact(full_response)
             if new_artifact:
                 st.session_state.active_artifact = new_artifact
+                st.session_state.code_run_result = None
             st.rerun()
