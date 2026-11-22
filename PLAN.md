@@ -1,4 +1,4 @@
-# OmniChat AI — Project Plan
+# OmniChat AI — Project Plan (Enhanced)
 **Hackathon:** [Build Your First AI App (Devpost)](https://build-your-first-ai-app.devpost.com/)  
 **Track:** AI Chatbots & Intelligent Productivity Assistants  
 **Repository:** [msekhardhar-cell/First-AI-App](file:///home/swarna-sekhar-dhar/projects/mamata/First-AI-App)  
@@ -10,20 +10,21 @@
 ## 1. Executive Summary & Problem Statement
 
 ### The Problem
-Most beginner AI chatbot projects are bare wrappers around a single API endpoint:
-- Generic, sluggish user interfaces with default styling and poor visual hierarchy.
-- Lack of customizable personas, memory retention, or context management.
-- Inability to interact with user-uploaded files, notes, or snippets.
-- Zero consideration for design tokens, accessibility, and production deployment.
+Most beginner AI chatbot projects suffer from critical limitations:
+- Bare-bones wrappers with standard bland styling and zero visual identity.
+- Inability to interact with or preview generated code, diagrams, or documents.
+- Rigid single-model dependencies that break when hackathon judges don't input personal API keys.
+- Lack of specialized interactive learning modalities (such as live quizzes or flashcards).
 
-### The Solution: OmniChat AI
-**OmniChat AI** is a modern, responsive, and multimodal AI chatbot built with Python and modern web technologies, styled using a high-end design token architecture inspired by modern Figma design systems (Linear, Vercel, and Apple Human Interface Guidelines). 
+### The Solution: OmniChat AI (Enhanced)
+**OmniChat AI** is a modern, responsive, and multimodal AI chatbot crafted with high-fidelity Figma design tokens (obsidian dark theme, glassmorphism, fluid typography, and accessible micro-interactions).
 
-It bridges conversational AI with practical utility:
-1. **Adaptive Personas:** Seamlessly switch between *General Assistant*, *Senior Code Architect*, *Academic Study Partner*, and *Executive Summarizer*.
-2. **Context-Aware Multimodality:** Drag-and-drop code files, documents, or study notes for real-time Q&A and synthesis.
-3. **Figma-Inspired Modern UI:** Dark/Light theme, glassmorphism accents, smooth streaming animations, syntax-highlighted code blocks with 1-click copy, and collapsible thought traces.
-4. **Zero-Friction Deployment:** One-click deployment to Streamlit Community Cloud or Hugging Face Spaces, fulfilling all Devpost criteria.
+It incorporates standout hackathon features:
+1. **Interactive "Canvas / Artifact" Viewer:** Side-by-side dedicated workspace for generated code, documents, and live rendered **Mermaid mind maps / flowcharts**.
+2. **Interactive Quiz & Flashcard Engine:** 1-click generation of interactive multiple-choice quizzes with instant grading, score tallies, and explanations.
+3. **Multi-Model Orchestration & Judge Sandbox:** Seamless toggle between **Google Gemini 2.5 Flash**, **Groq Llama-3.3**, and a **Zero-Setup Demo Sandbox** guaranteeing judges can test all features without requiring their own API keys.
+4. **Adaptive Personas & Context Ingestion:** Specialized modes (General, Code Architect, Study Tutor, Summarizer) paired with multi-file parsing (`.pdf`, `.py`, `.md`, `.txt`, `.csv`).
+5. **Production-Ready & 1-Click Deployable:** Ready for Streamlit Community Cloud or Hugging Face Spaces.
 
 ---
 
@@ -31,70 +32,58 @@ It bridges conversational AI with practical utility:
 
 | Devpost Criteria | Weight | OmniChat AI Execution |
 | :--- | :--- | :--- |
-| **Creativity & Originality** | High | Dynamic persona cards, conversational branching, and prompt inspiration chips with interactive context attachment. |
-| **Implementation & Functionality** | High | Robust streaming LLM responses, resilient error handling with API failover, token counting, and multi-file ingestion. |
-| **Usefulness & Real-World Impact** | High | Solves daily productivity hurdles for students and developers (instant code debugging, study guides, structured notes). |
-| **Presentation & Documentation** | High | Polished Figma-derived UI, architectural diagrams, video walkthrough script, and clear setup guide. |
+| **Creativity & Originality** | High | Side-by-side Artifact Canvas, dynamic interactive quiz module, and auto-rendered Mermaid flowcharts. |
+| **Implementation & Functionality** | High | Multi-provider router (Gemini, Groq, Offline Sandbox), real-time streaming, multi-file parser, and state management. |
+| **Usefulness & Real-World Impact** | High | End-to-end everyday study and developer copilot for students and technical professionals. |
+| **Presentation & Documentation** | High | Figma-derived obsidian design system, live metric badges (tokens/sec, latency), video walkthrough script, and complete docs. |
 
 ---
 
-## 3. System Architecture & Tech Stack
+## 3. System Architecture
 
 ```mermaid
 flowchart TD
-    User([User / Browser]) <--> UI[Modern Streamlit Web Interface]
+    User([User / Browser]) <--> UI[Streamlit Modern Web Interface]
     
-    subgraph UI_Layer ["Modern UI & Design System"]
-        UI --> DesignTokens[Figma-Inspired CSS Tokens]
-        UI --> ChatHistory[Session History & State Manager]
-        UI --> FileUploader[Document & Code Parser]
+    subgraph UI_Layer ["Modern Figma UI & Components"]
+        UI --> DesignTokens[Obsidian Glassmorphic CSS]
+        UI --> Canvas[Interactive Artifact Canvas / Diagram Viewer]
+        UI --> QuizWidget[Interactive Quiz & Scoring Widget]
+        UI --> PromptChips[Categorized Starter Chips Carousel]
     end
 
     subgraph Core_Engine ["OmniChat Core Engine"]
-        ChatHistory --> PromptEngine[Prompt & Persona Orchestrator]
-        FileUploader --> ContextInjector[Context Augmentation]
-        PromptEngine --> ModelRouter[Model Router & Fallback Handler]
+        UI --> StateManager[Chat History & Session Manager]
+        UI --> FileParser[Multi-Format Document Parser]
+        StateManager --> PromptEngine[Persona & Prompt Orchestrator]
+        FileParser --> ContextInjector[Context Augmentor]
+        PromptEngine --> ModelRouter[Model Router & Judge Sandbox]
         ContextInjector --> ModelRouter
     end
 
-    subgraph AI_Providers ["LLM Providers"]
-        ModelRouter <--> Gemini[Google Gemini 2.5 / 2.0 API]
+    subgraph AI_Providers ["Model Providers"]
+        ModelRouter <--> Gemini[Google Gemini 2.5 Flash]
         ModelRouter <--> Groq[Groq Llama 3.3 Fast Inference]
-        ModelRouter <--> LocalFallback[Rule-Based Mock/Offline Fallback]
+        ModelRouter <--> Sandbox[Built-in Zero-Key Judge Sandbox]
     end
 ```
 
-### Technology Selection
-- **Frontend / Application Framework:** Python 3.10+ with **Streamlit** (custom CSS injection for modern Figma design tokens).
-- **Core AI Models:** **Google Gemini 2.5 Flash** (high reasoning capability, fast response times, generous free tier) with optional **Groq / Llama 3.3** for instant inference.
-- **Document & File Handling:** Native parsing for `.txt`, `.py`, `.js`, `.json`, `.csv`, `.md`, and `.pdf`.
-- **Styling Architecture:** Custom CSS variables matching modern Figma design systems:
-  - Deep obsidian dark background (`#0d1117`, `#161b22`)
-  - Accent neon violet & electric blue gradients (`#8a2be2`, `#3b82f6`)
-  - Subtle frosted glass borders and elevated cards
-  - Clean Inter / SF Pro typography hierarchy
-
 ---
 
-## 4. Key Functional Features
+## 4. Enhanced Feature Set
 
-1. **Streaming Multi-Turn Conversations:** Natural, real-time typing effect with Markdown and LaTeX math rendering.
-2. **Persona Switcher:**
-   - 🤖 *Omni Assistant* (Balanced, helpful, concise)
-   - 💻 *Code Architect* (Refactoring, architecture reviews, unit tests)
-   - 🎓 *Study Tutor* (Socratic questioning, concept simplification, quiz generator)
-   - ⚡ *Fast Summarizer* (Bullet points, key takeaways, action items)
-3. **Smart Prompt Starter Chips:** One-click pre-engineered prompts to immediately showcase capabilities to hackathon judges.
-4. **File & Code Ingestion:** Attach project files or notes directly into conversation context.
-5. **Session Management & Export:**
-   - Download chat history as Markdown or JSON.
-   - Clear session with confirmation modal.
-   - Estimated token & latency metrics.
-
----
-
-## 5. Security & Submission Compliance
-- **Zero API Key Leakage:** `.env.example` provided; `.env` strictly git-ignored.
-- **Clean Git History:** Commits attributed directly to `msekhardhar-cell`.
-- **Public Open-Source License:** MIT License already initialized.
-- **Self-Contained Run:** Single command setup via `pip install -r requirements.txt && streamlit run app.py`.
+1. **Split-Screen Artifact Canvas:**
+   - Detects code snippets or structured guides and renders them in an interactive inspector.
+   - Live rendering of Mermaid.js flowcharts and system diagrams.
+   - 1-click copy, download as file, and fullscreen expand.
+2. **Interactive Study Quiz Generator:**
+   - 1-click button: *"Generate 5-Question Quiz from current context"*.
+   - Renders interactive radio/button choices with immediate visual feedback (green for correct, red with explanation for incorrect).
+   - Live progress indicator and final score report card.
+3. **Zero-Setup Judge Sandbox Mode:**
+   - Pre-loaded interactive scenarios (Code Debugging, Study Session, System Design) runnable without any API key or billing required.
+4. **Figma Design System Tokens:**
+   - Palette: Obsidian black (`#0b0f17`), Surface card (`#161b26`), Cosmic violet (`#8b5cf6`), Electric cyan (`#06b6d4`).
+   - Micro-interactions: Floating prompt pills, animated status indicators, custom scrollbars.
+5. **Comprehensive Context Ingestion:**
+   - Supports `.pdf`, `.py`, `.js`, `.md`, `.txt`, `.csv` with token count preview and tag badges.
