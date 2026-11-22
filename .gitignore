@@ -29,7 +29,8 @@ wheels/
 
 # Environment Variables & Secrets
 .env
-.env.local
+.env.*
+!.env.example
 *.token
 *.pem
 *.key
