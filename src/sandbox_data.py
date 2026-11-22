@@ -1,6 +1,5 @@
 """OmniChat AI - Rich Sandbox Demonstrations for Judge Evaluation without API Keys."""
 
-# Curated pre-computed responses matching common judge test queries
 SANDBOX_RESPONSES = {
     "default": """### Welcome to OmniChat AI (Sandbox Mode) ⚡
 
@@ -8,15 +7,16 @@ I am operating in **Judge Sandbox Mode**, designed so you can explore all featur
 
 Here is what you can try:
 1. **Explore Personas:** Switch to *Senior Code Architect* or *Academic Study Partner* in the sidebar.
-2. **Interactive Quiz:** Click the **"🎯 Generate Quiz from Context"** button above to launch an interactive quiz!
-3. **Artifact Canvas:** Notice the right panel showing live rendered diagrams and structured code.
+2. **⚔️ Model Battle Mode:** Pit two AI models side-by-side to compare reasoning and latency!
+3. **Interactive Quiz:** Click the **"🎯 Launch Quiz"** button above to launch an interactive quiz!
+4. **Artifact Canvas:** Notice the right panel showing live rendered diagrams and structured code.
 
 ```mermaid
 flowchart LR
     A[User Request] --> B[OmniChat Engine]
-    B --> C{Context Attached?}
-    C -->|Yes| D[Augmented Reasoning]
-    C -->|No| E[Persona Prompt]
+    B --> C{Battle Mode?}
+    C -->|Yes| D[Dual Streaming Arena]
+    C -->|No| E[Single Model Stream]
     D --> F[Artifact Canvas & Quiz Engine]
     E --> F
 ```
@@ -73,9 +73,6 @@ graph LR
 
 #### Crucial Distinction (No Faster-Than-Light Signaling):
 Even though the correlation is instantaneous, **entanglement cannot transmit classical information or Morse code faster than light**. Because the outcome at Earth is fundamentally random, Earth's observer cannot *force* the particle to land in a specific state to send a deliberate message.
-
-> **💡 Quick Concept Check:**  
-> Would you like me to generate a 5-question multiple choice quiz on this topic? Click the **"Generate Quiz"** button!
 """,
 
     "summarizer_brief": """### Executive Brief: AI System Readiness & ROI Matrix ⚡
@@ -95,11 +92,41 @@ Even though the correlation is instantaneous, **entanglement cannot transmit cla
 1. **Zero Barrier to Entry:** Evaluators can thoroughly stress-test every feature without signing up for third-party API keys.
 2. **High Visual Fidelity:** Design tokens match modern developer tools (Vercel, Linear).
 3. **Clear Next Milestones:** Cloud hosting deployment to Streamlit Community Cloud.
+""",
+
+    "nous_battle_response": """### Nous Hermes 3 Evaluation: Chain-of-Thought Synthesis 🏛️
+
+<thinking>
+Analyzing the architectural trade-offs between distributed microservices and a cohesive modular monolith.
+Key parameters: network boundary latency, operational complexity overhead, database transactions, cognitive load on developers.
+</thinking>
+
+Here is my structured comparative assessment:
+
+1. **Cognitive Load & Developer Velocity:**
+   - *Modular Monolith:* Low. Single refactoring step across modules, compile-time type verification, zero RPC serialization overhead.
+   - *Microservices:* High. Requires dedicated API contracts (Protobuf/gRPC), versioning discipline, and independent CI/CD pipelines per service.
+
+2. **Data Consistency & Transactions:**
+   - *Modular Monolith:* ACID guarantees via standard relational database transactions.
+   - *Microservices:* Eventual consistency requiring the Saga Pattern or Outbox Pattern to prevent silent state divergence.
+
+```mermaid
+graph TD
+    A[Monolith Single Transaction] -->|ACID Guaranteed| B[(Unified Database)]
+    C[Microservice A] -->|Network Call / Outbox| D[Message Broker]
+    D -->|Eventual Consistency| E[Microservice B]
+```
+
+**Verdict:** The majority of scaling problems prior to Series B are organizational, not computational. Choose a Modular Monolith first, enforce domain boundaries strictly, and decouple only when distinct scaling vectors demand independent deployment.
 """
 }
 
-def get_sandbox_response(query: str, persona_id: str) -> str:
-    """Returns a matching rich sandbox response based on query keywords or persona."""
+def get_sandbox_response(query: str, persona_id: str, model_hint: str = "") -> str:
+    """Returns a matching rich sandbox response based on query keywords, persona, or model."""
+    if "nous" in model_hint.lower() or "hermes" in model_hint.lower():
+        return SANDBOX_RESPONSES["nous_battle_response"]
+
     q = query.lower()
     if any(k in q for k in ["code", "architect", "microservice", "monolith", "bug", "python", "diagram"]):
         return SANDBOX_RESPONSES["code_architecture"]
