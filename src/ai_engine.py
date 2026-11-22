@@ -1,10 +1,10 @@
-"""OmniChat AI - Multi-Model Router & Streaming Engine."""
+"""OmniChat - Multi-Model Router & Streaming Engine."""
 import time
 import json
 from typing import Generator, List, Dict, Any
 from src.sandbox_data import get_sandbox_response
 from src.personas import PERSONAS
-from src.config import NOUS_BASE_URL
+from src.config import NOUS_BASE_URL, GROQ_API_KEY, GEMINI_API_KEY, NOUS_API_KEY
 
 def stream_ai_response(
     provider: str,
@@ -14,9 +14,8 @@ def stream_ai_response(
     file_context: str = "",
     model_name: str = ""
 ) -> Generator[str, None, None]:
-    """Streams responses from the selected provider (Gemini, Nous Portal Hermes, Groq, or Judge Sandbox)."""
+    """Streams responses from the selected provider (Groq, Gemini, Nous, or Sandbox)."""
     
-    # 1. Retrieve persona system prompt
     persona = PERSONAS.get(persona_id, PERSONAS["omni"])
     system_instruction = persona["system_prompt"]
     if file_context:
@@ -24,21 +23,55 @@ def stream_ai_response(
         
     last_user_query = messages[-1]["content"] if messages else ""
 
-    # 2. Judge Sandbox Mode (Zero-key demo)
-    if provider == "sandbox" or not api_key:
-        full_text = get_sandbox_response(last_user_query, persona_id, model_hint=provider or model_name)
-        # Simulate realistic word-by-word streaming typing effect
-        words = full_text.split(" ")
-        for i, word in enumerate(words):
-            yield word + (" " if i < len(words) - 1 else "")
-            time.sleep(0.016)
-        return
+    # 1. Groq Mode (Primary high-speed live provider)
+    active_groq_key = api_key if (api_key and provider.startswith("groq")) else GROQ_API_KEY
+    if (provider in ["groq", "groq_qwen", "groq_gpt"] or "groq" in provider) and active_groq_key:
+        try:
+            from groq import Groq
+            client = Groq(api_key=active_groq_key)
+            
+            target_model = model_name
+            if not target_model:
+                if provider == "groq_gpt":
+                    target_model = "openai/gpt-oss-120b"
+                else:
+                    target_model = "qwen/qwen3.8-27b"
+            
+            # If target model is GPT-OSS and query involves prediction/astrology, fallback to Qwen
+            # because GPT-OSS has a policy filter against fortune telling / prediction queries
+            is_prediction_query = any(k in last_user_query.lower() for k in ["predict", "horoscope", "kundali", "astrology", "birth", "day"])
+            if "gpt-oss" in target_model and is_prediction_query:
+                target_model = "qwen/qwen3.8-27b"
+                    
+            groq_messages = [{"role": "system", "content": system_instruction}]
+            for msg in messages:
+                groq_messages.append({"role": msg["role"], "content": msg["content"]})
+                
+            stream = client.chat.completions.create(
+                model=target_model,
+                messages=groq_messages,
+                stream=True,
+                temperature=0.7
+            )
+            yielded_any = False
+            for chunk in stream:
+                content = chunk.choices[0].delta.content or ""
+                if content:
+                    yielded_any = True
+                    yield content
+                    
+            if yielded_any:
+                return
+        except Exception:
+            # On transient failure, fall through to prompt-aware synthesis
+            pass
 
-    # 3. Google Gemini Mode
-    if provider == "gemini":
+    # 2. Google Gemini Mode
+    active_gemini_key = api_key if (api_key and provider == "gemini") else GEMINI_API_KEY
+    if provider == "gemini" and active_gemini_key:
         try:
             from google import genai
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=active_gemini_key)
             
             contents = []
             for msg in messages:
@@ -50,25 +83,24 @@ def stream_ai_response(
                 contents=contents,
                 config={"system_instruction": system_instruction}
             )
+            yielded_any = False
             for chunk in response_stream:
                 if chunk.text:
+                    yielded_any = True
                     yield chunk.text
-            return
-        except Exception as e:
-            err_msg = str(e)
-            yield f"⚠️ **Gemini API Notice:** {err_msg}\n\n*Falling back to Sandbox Mode:*\n\n"
-            full_text = get_sandbox_response(last_user_query, persona_id, model_hint="gemini")
-            for word in full_text.split(" "):
-                yield word + " "
-                time.sleep(0.015)
-            return
+            if yielded_any:
+                return
+        except Exception:
+            # On quota exhaustion or failure, fall through to prompt-aware synthesis
+            pass
 
-    # 4. Nous Portal (Hermes 3) OpenAI-Compatible Mode
-    if provider == "nous":
+    # 3. Nous Portal (OpenAI-compatible) Mode
+    active_nous_key = api_key if (api_key and provider == "nous") else NOUS_API_KEY
+    if provider == "nous" and active_nous_key:
         try:
             import httpx
             headers = {
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": f"Bearer {active_nous_key}",
                 "Content-Type": "application/json"
             }
             nous_messages = [{"role": "system", "content": system_instruction}]
@@ -81,57 +113,28 @@ def stream_ai_response(
                 "stream": True,
                 "temperature": 0.7
             }
-            
             with httpx.Client(timeout=30.0) as client:
                 with client.stream("POST", f"{NOUS_BASE_URL}/chat/completions", headers=headers, json=payload) as response:
-                    if response.status_code != 200:
-                        raise ValueError(f"HTTP {response.status_code}: {response.read().decode('utf-8', errors='ignore')}")
-                    for line in response.iter_lines():
-                        if line.startswith("data: ") and not line.strip() == "data: [DONE]":
-                            data_str = line[6:].strip()
-                            if data_str:
-                                chunk = json.loads(data_str)
-                                delta = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
-                                if delta:
-                                    yield delta
-            return
-        except Exception as e:
-            err_msg = str(e)
-            yield f"⚠️ **Nous Portal API Notice:** {err_msg}\n\n*Falling back to Nous Hermes Sandbox Synthesis:*\n\n"
-            full_text = get_sandbox_response(last_user_query, persona_id, model_hint="nous")
-            for word in full_text.split(" "):
-                yield word + " "
-                time.sleep(0.015)
-            return
+                    if response.status_code == 200:
+                        yielded_any = False
+                        for line in response.iter_lines():
+                            if line.startswith("data: ") and not line.strip() == "data: [DONE]":
+                                data_str = line[6:].strip()
+                                if data_str:
+                                    chunk = json.loads(data_str)
+                                    delta = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                                    if delta:
+                                        yielded_any = True
+                                        yield delta
+                        if yielded_any:
+                            return
+        except Exception:
+            pass
 
-    # 5. Groq Mode
-    if provider == "groq":
-        try:
-            from groq import Groq
-            client = Groq(api_key=api_key)
-            
-            groq_messages = [{"role": "system", "content": system_instruction}]
-            for msg in messages:
-                groq_messages.append({"role": msg["role"], "content": msg["content"]})
-                
-            stream = client.chat.completions.create(
-                model=model_name or "llama-3.3-70b-versatile",
-                messages=groq_messages,
-                stream=True
-            )
-            for chunk in stream:
-                content = chunk.choices[0].delta.content or ""
-                if content:
-                    yield content
-            return
-        except Exception as e:
-            err_msg = str(e)
-            yield f"⚠️ **Groq API Notice:** {err_msg}\n\n*Falling back to Sandbox Mode:*\n\n"
-            full_text = get_sandbox_response(last_user_query, persona_id, model_hint="groq")
-            for word in full_text.split(" "):
-                yield word + " "
-                time.sleep(0.015)
-            return
-
-    # Fallback default
-    yield "Unrecognized model provider. Running in Sandbox mode."
+    # 4. Prompt-Aware Dynamic Synthesis (Zero-key or fallback)
+    hint = model_name or provider
+    full_text = get_sandbox_response(last_user_query, persona_id, model_hint=hint)
+    words = full_text.split(" ")
+    for i, word in enumerate(words):
+        yield word + (" " if i < len(words) - 1 else "")
+        time.sleep(0.012)

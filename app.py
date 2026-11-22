@@ -89,7 +89,7 @@ with st.sidebar:
             api_key = st.text_input("Nous Portal API Key:", value=NOUS_API_KEY, type="password")
             if not api_key:
                 st.info("Running in Nous Hermes Sandbox.")
-        elif selected_provider == "groq":
+        elif selected_provider.startswith("groq"):
             api_key = st.text_input("Groq API Key:", value=GROQ_API_KEY, type="password")
             if not api_key:
                 st.info("Running in Sandbox Mode.")
@@ -97,22 +97,24 @@ with st.sidebar:
             st.success("Sandbox active: evaluate without an API key.")
     else:
         st.markdown("### Battle Setup")
+        battle_options = list(AVAILABLE_MODELS.keys())
         model_a_provider = st.selectbox(
             "Model A:",
-            ["gemini", "groq", "sandbox"],
+            battle_options,
             format_func=lambda k: AVAILABLE_MODELS[k]["name"],
             index=0
         )
         
-        free_model_names = [f"{m['name']} ({m['id']})" for m in st.session_state.discovered_free_models]
+        free_model_names = [f"Free: {m['name']} ({m['id']})" for m in st.session_state.discovered_free_models]
+        model_b_choices = ["groq_gpt", "groq_qwen", "gemini"] + free_model_names
         selected_free_choice = st.selectbox(
-            "Model B (Discovered Free Model):",
-            free_model_names,
+            "Model B:",
+            model_b_choices,
+            format_func=lambda k: AVAILABLE_MODELS[k]["name"] if k in AVAILABLE_MODELS else k,
             index=0
         )
-        selected_free_model_id = selected_free_choice.split("(")[-1].replace(")", "").strip()
         selected_provider = model_a_provider
-        api_key = GEMINI_API_KEY
+        api_key = GROQ_API_KEY if model_a_provider.startswith("groq") else GEMINI_API_KEY
 
     st.divider()
 
@@ -248,14 +250,26 @@ if is_battle:
         col_stream_a, col_stream_b = st.columns(2)
         
         model_a_display = AVAILABLE_MODELS.get(model_a_provider, {}).get("name", "Model A")
-        model_b_display = selected_free_choice.split("(")[0].strip()
+        key_a = GROQ_API_KEY if model_a_provider.startswith("groq") else (GEMINI_API_KEY if model_a_provider == "gemini" else NOUS_API_KEY)
+        model_a_target = AVAILABLE_MODELS.get(model_a_provider, {}).get("model", "")
+        
+        if selected_free_choice in AVAILABLE_MODELS:
+            model_b_display = AVAILABLE_MODELS[selected_free_choice]["name"]
+            provider_b = selected_free_choice
+            model_b_target = AVAILABLE_MODELS[selected_free_choice]["model"]
+            key_b = GROQ_API_KEY if selected_free_choice.startswith("groq") else (GEMINI_API_KEY if selected_free_choice == "gemini" else NOUS_API_KEY)
+        else:
+            model_b_display = selected_free_choice.split("(")[0].replace("Free:", "").strip()
+            provider_b = "nous"
+            model_b_target = selected_free_choice.split("(")[-1].replace(")", "").strip()
+            key_b = NOUS_API_KEY
         
         with col_stream_a:
             st.markdown(f"#### {model_a_display}")
             holder_a = st.empty()
             text_a = ""
             t0_a = time.time()
-            for chunk in stream_ai_response(model_a_provider, history, selected_persona_id, GEMINI_API_KEY, context_str):
+            for chunk in stream_ai_response(model_a_provider, history, selected_persona_id, key_a, context_str, model_name=model_a_target):
                 text_a += chunk
                 holder_a.markdown(text_a + " ▌")
             holder_a.markdown(text_a)
@@ -267,7 +281,7 @@ if is_battle:
             holder_b = st.empty()
             text_b = ""
             t0_b = time.time()
-            for chunk in stream_ai_response("nous", history, selected_persona_id, NOUS_API_KEY, context_str, model_name=selected_free_model_id):
+            for chunk in stream_ai_response(provider_b, history, selected_persona_id, key_b, context_str, model_name=model_b_target):
                 text_b += chunk
                 holder_b.markdown(text_b + " ▌")
             holder_b.markdown(text_b)
@@ -391,12 +405,14 @@ else:
                 full_response = ""
                 start_time = time.time()
                 
+                model_target = AVAILABLE_MODELS.get(selected_provider, {}).get("model", "")
                 stream = stream_ai_response(
                     provider=selected_provider,
                     messages=st.session_state.messages,
                     persona_id=selected_persona_id,
                     api_key=api_key,
-                    file_context=context_str
+                    file_context=context_str,
+                    model_name=model_target
                 )
                 
                 for chunk in stream:
