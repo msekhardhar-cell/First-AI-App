@@ -153,21 +153,29 @@ with st.sidebar:
         st.rerun()
 
 # Top Header
-header_mode_badge = "Battle Mode" if is_battle else AVAILABLE_MODELS[selected_provider]["badge"]
+header_mode_badge = "⚔️ Battle Arena" if is_battle else f"⚡ {AVAILABLE_MODELS[selected_provider]['badge']}"
+is_sandbox_active = selected_provider == 'sandbox' or (selected_provider == 'gemini' and not api_key)
+badge_class = 'sandbox' if is_sandbox_active else ''
+
 st.markdown(f"""
 <div class="omni-header">
     <div>
-        <h1 class="omni-title">OmniChat</h1>
-        <p style="margin: 0.2rem 0 0 0; color: #94a3b8; font-size: 0.9rem;">
-            Model Battle, Artifact Canvas & Free Model Scanner
+        <h1 class="omni-title">
+            <span style="background: linear-gradient(135deg, #6366F1, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✦</span>
+            OmniChat
+            <span style="font-size: 11px; font-weight: 700; color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.35); padding: 2px 8px; border-radius: 9999px; vertical-align: middle; background: rgba(99, 102, 241, 0.1);">AI STUDIO</span>
+        </h1>
+        <p style="margin: 0.25rem 0 0 0; color: #94A3B8; font-size: 0.85rem; font-weight: 500;">
+            Next-Gen Multi-Model Battle Arena, Live Artifact Canvas & Free Open Inference Scanner
         </p>
     </div>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <span class="omni-badge {'sandbox' if selected_provider == 'sandbox' or not api_key else ''}">
+    <div style="display: flex; gap: 0.6rem; align-items: center;">
+        <span class="omni-badge {badge_class}">
+            <span class="ai-pulse-dot"></span>
             {header_mode_badge}
         </span>
-        <span class="omni-badge">
-            {current_persona['name']}
+        <span class="omni-badge" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: #E2E8F0;">
+            👤 {current_persona['name']}
         </span>
     </div>
 </div>
@@ -177,13 +185,13 @@ st.markdown(f"""
 col_head_left, col_head_right = st.columns([3, 1])
 with col_head_left:
     st.markdown("""
-    <span class="metric-pill">Figma Design Tokens</span>
-    <span class="metric-pill">Model Battle</span>
-    <span class="metric-pill">Free Model Scanner</span>
-    <span class="metric-pill">Self-Grading Quiz</span>
+    <span class="metric-pill">✨ Figma AI Dark System</span>
+    <span class="metric-pill">⚡ Dual Stream LPUs</span>
+    <span class="metric-pill">📐 Live SVG Canvas</span>
+    <span class="metric-pill">🎯 Interactive Quiz</span>
     """, unsafe_allow_html=True)
 with col_head_right:
-    quiz_button_label = "Close Quiz" if st.session_state.show_quiz else "Launch Quiz"
+    quiz_button_label = "Close Quiz" if st.session_state.show_quiz else "🎯 Launch Quiz"
     if st.button(quiz_button_label, use_container_width=True):
         st.session_state.show_quiz = not st.session_state.show_quiz
         st.rerun()
@@ -198,10 +206,13 @@ if st.session_state.show_scanner:
         for i, m in enumerate(st.session_state.discovered_free_models[:9]):
             with cols[i % 3]:
                 st.markdown(f"""
-                <div class="omni-card" style="padding: 0.9rem; margin-bottom: 0.6rem;">
-                    <strong style="color: #65dbd0;">{m['name']}</strong><br/>
-                    <code style="font-size: 0.75rem; color: #9bb3c7;">{m['id']}</code><br/>
-                    <span style="font-size: 0.8rem; color: #94a3b8;">Context: {m['context_length']:,} tokens &bull; {m['provider']}</span>
+                <div class="omni-card" style="padding: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #818CF8;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
+                        <strong style="color: #F8FAFC; font-size: 0.95rem;">{m['name']}</strong>
+                        <span style="font-size: 10px; background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.3); padding: 1px 6px; border-radius: 9999px; font-weight: 700;">FREE</span>
+                    </div>
+                    <code style="font-size: 0.75rem; color: #94A3B8; background: rgba(0, 0, 0, 0.35); padding: 2px 6px; border-radius: 6px; display: inline-block; margin-bottom: 0.4rem;">{m['id']}</code><br/>
+                    <span style="font-size: 0.75rem; color: #64748B;">Context: <span style="color: #38BDF8; font-weight: 600;">{m['context_length']:,}</span> tokens &bull; {m['provider']}</span>
                 </div>
                 """, unsafe_allow_html=True)
         st.divider()
@@ -265,7 +276,12 @@ if is_battle:
             key_b = NOUS_API_KEY
         
         with col_stream_a:
-            st.markdown(f"#### {model_a_display}")
+            st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(129, 140, 248, 0.25);">
+                <h4 style="margin: 0; color: #818CF8; font-size: 1.05rem;">⚡ {model_a_display}</h4>
+                <span class='metric-pill latency'>Inference Stream</span>
+            </div>
+            """, unsafe_allow_html=True)
             holder_a = st.empty()
             text_a = ""
             t0_a = time.time()
@@ -274,10 +290,15 @@ if is_battle:
                 holder_a.markdown(text_a + " ▌")
             holder_a.markdown(text_a)
             lat_a = time.time() - t0_a
-            st.caption(f"Completed in {lat_a:.2f}s")
+            st.caption(f"⚡ Completed in {lat_a:.2f}s")
             
         with col_stream_b:
-            st.markdown(f"#### {model_b_display}")
+            st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(34, 211, 238, 0.25);">
+                <h4 style="margin: 0; color: #22D3EE; font-size: 1.05rem;">🚀 {model_b_display}</h4>
+                <span class='metric-pill latency' style="border-color: rgba(6, 182, 212, 0.35); color: #67E8F9;">Inference Stream</span>
+            </div>
+            """, unsafe_allow_html=True)
             holder_b = st.empty()
             text_b = ""
             t0_b = time.time()
@@ -286,7 +307,7 @@ if is_battle:
                 holder_b.markdown(text_b + " ▌")
             holder_b.markdown(text_b)
             lat_b = time.time() - t0_b
-            st.caption(f"Completed in {lat_b:.2f}s")
+            st.caption(f"🚀 Completed in {lat_b:.2f}s")
             
         st.session_state.battle_messages.append({
             "prompt": battle_input,
@@ -319,18 +340,26 @@ else:
 
     # Artifact Canvas
     with col_canvas:
-        st.markdown("### Artifact Canvas")
-        st.caption("Extracted code blocks and system diagrams appear here:")
+        st.markdown("""
+        <div class="artifact-studio-header">
+            <div class="artifact-studio-window-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+            </div>
+            <span>STUDIO ARTIFACT CANVAS</span>
+            <span style="font-size: 10px; color: #818CF8; background: rgba(99, 102, 241, 0.15); padding: 1px 6px; border-radius: 9999px;">LIVE</span>
+        </div>
+        """, unsafe_allow_html=True)
         
         artifact = st.session_state.active_artifact
         if artifact:
             if artifact["type"] == "mermaid":
-                st.markdown("#### System Diagram (Interactive Visualizer)")
-                # Interactive SVG rendering
+                st.markdown("<p style='font-size: 0.85rem; color: #94A3B8; margin: 0.5rem 0;'>📐 <strong>Interactive System Diagram</strong></p>", unsafe_allow_html=True)
                 render_mermaid_svg(artifact["content"], height=320)
-                st.download_button("Download Mermaid File", data=artifact["content"], file_name="diagram.mmd", use_container_width=True)
+                st.download_button("Download Mermaid (.mmd)", data=artifact["content"], file_name="diagram.mmd", use_container_width=True)
             elif artifact["type"] == "code":
-                st.markdown(f"#### Code ({artifact.get('lang', 'text')})")
+                st.markdown(f"<p style='font-size: 0.85rem; color: #94A3B8; margin: 0.5rem 0;'>💻 <strong>Executable Code ({artifact.get('lang', 'text')})</strong></p>", unsafe_allow_html=True)
                 st.code(artifact["content"], language=artifact.get("lang", "text"))
                 
                 col_c1, col_c2 = st.columns(2)
@@ -338,7 +367,7 @@ else:
                     st.download_button("Download Code File", data=artifact["content"], file_name=f"artifact.{artifact.get('lang', 'txt')}", use_container_width=True)
                 with col_c2:
                     if artifact.get("lang") in ["python", "py"]:
-                        if st.button("Run Code", use_container_width=True):
+                        if st.button("▶ Run Code", use_container_width=True):
                             res = execute_python_code(artifact["content"])
                             st.session_state.code_run_result = res
                             st.rerun()
@@ -346,15 +375,25 @@ else:
                 # Show Code Execution Result if active
                 if st.session_state.code_run_result:
                     res = st.session_state.code_run_result
-                    st.markdown("##### Execution Terminal Output:")
-                    if res["success"]:
-                        st.success("Process exited with code 0")
-                        st.code(res["stdout"] if res["stdout"] else "[Process finished with no output]")
-                    else:
-                        st.error(f"Execution Error (Exit {res['returncode']}):")
-                        st.code(res["stderr"])
+                    exit_color = "#10B981" if res["success"] else "#EF4444"
+                    status_label = "EXIT 0 (SUCCESS)" if res["success"] else f"EXIT {res['returncode']} (ERROR)"
+                    terminal_text = res["stdout"] if res["stdout"] else (res["stderr"] if res["stderr"] else "[Process finished with no output]")
+                    st.markdown(f"""
+                    <div class="artifact-studio-header" style="margin-top: 1rem;">
+                        <div class="artifact-studio-window-dots">
+                            <span class="dot-red"></span>
+                            <span class="dot-yellow"></span>
+                            <span class="dot-green"></span>
+                        </div>
+                        <span>TERMINAL OUTPUT</span>
+                        <span style="font-size: 10px; color: {exit_color}; font-weight: 700;">{status_label}</span>
+                    </div>
+                    <div class="terminal-box">
+                        <pre style="margin: 0; white-space: pre-wrap; color: {'#34D399' if res['success'] else '#F87171'};">{terminal_text}</pre>
+                    </div>
+                    """, unsafe_allow_html=True)
         else:
-            st.info("Generated code and system diagrams will automatically render here as you chat.")
+            st.markdown("<p style='font-size: 0.85rem; color: #94A3B8; margin: 0.5rem 0 0.75rem 0;'>Live diagrammatic models and executable scripts render here in real time:</p>", unsafe_allow_html=True)
             sample_mermaid = """flowchart TD
     Client[Web Client] --> API[FastAPI / Gemini]
     API --> Canvas[Artifact Canvas]
@@ -364,20 +403,20 @@ else:
     # Chat Thread
     with col_chat:
         if not st.session_state.messages:
-            st.markdown("#### Sample Prompts")
+            st.markdown("#### ✨ Suggested Prompts")
             chip1, chip2 = st.columns(2)
             with chip1:
-                if st.button("Monolith vs Microservices Architecture", use_container_width=True):
+                if st.button("⚡ Microservices vs Monolith Architecture", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Explain Microservices vs Modular Monolith with an architectural Mermaid diagram."})
                     st.rerun()
-                if st.button("Explain Quantum Entanglement simply", use_container_width=True):
+                if st.button("⚛️ Explain Quantum Entanglement simply", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Explain Quantum Entanglement simply with analogies and check-in questions."})
                     st.rerun()
             with chip2:
-                if st.button("Executive Project Briefing", use_container_width=True):
+                if st.button("📊 Executive Project Briefing", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": "Provide an executive briefing and readiness matrix for this AI application."})
                     st.rerun()
-                if st.button("Launch Interactive Quiz", use_container_width=True):
+                if st.button("🎯 Launch Adaptive Study Quiz", use_container_width=True):
                     st.session_state.show_quiz = True
                     st.rerun()
             st.divider()

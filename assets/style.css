@@ -1,28 +1,29 @@
-/* OmniChat - Figma Design Tokens from file TKiZXwjkWdkponF1zNsfli */
+/* OmniChat - Advanced AI Design System Tokens (Linear / Perplexity aesthetic) */
 :root {
-  /* Colors from Figma Node 5:186 */
-  --figma-bg-root: #111a25;
-  --figma-bg-surface: #1d2d3c;
-  --figma-bg-action: #29434b;
-  --figma-border-accent: #65dbd0;
-  --figma-text-primary: #f5fafd;
-  --figma-text-accent: #65dbd0;
-  --figma-text-secondary: #9bb3c7;
-  --figma-text-muted: #626d77;
-
-  /* Theme C Accents from Figma Node 52:164 */
-  --figma-accent-sage: #85ad8b;
-  --figma-accent-amber: #e5b679;
-  --figma-accent-crimson: #b73527;
-
-  /* Radii */
-  --figma-radius-root: 25px;
-  --figma-radius-card: 17px;
-  --figma-radius-pill: 14px;
+  --ai-bg-root: #08090C;
+  --ai-bg-surface: rgba(16, 20, 32, 0.65);
+  --ai-bg-surface-elevated: rgba(22, 28, 45, 0.85);
+  
+  --ai-accent-indigo: #6366F1;
+  --ai-accent-violet: #8B5CF6;
+  --ai-accent-cyan: #06B6D4;
+  --ai-accent-emerald: #10B981;
+  
+  --ai-border-subtle: rgba(255, 255, 255, 0.08);
+  --ai-border-glow: rgba(99, 102, 241, 0.35);
+  
+  --ai-text-primary: #F8FAFC;
+  --ai-text-secondary: #94A3B8;
+  --ai-text-muted: #64748B;
+  
+  --ai-radius-card: 16px;
+  --ai-radius-button: 12px;
+  --ai-radius-pill: 9999px;
 }
 
 body {
-  background-color: var(--figma-bg-root);
-  color: var(--figma-text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--ai-bg-root);
+  color: var(--ai-text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.01em;
 }

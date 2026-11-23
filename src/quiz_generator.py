@@ -54,8 +54,15 @@ def render_interactive_quiz(quiz_data: List[Dict[str, Any]] = None):
     if not quiz_data:
         quiz_data = DEFAULT_QUIZ
         
-    st.markdown("### 🎯 Interactive Study Quiz")
-    st.caption("Test your comprehension with instant scoring and detailed explanations.")
+    st.markdown("""
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <h3 style="margin: 0; color: #F8FAFC; font-size: 1.25rem;">🎯 Adaptive Study Quiz</h3>
+        <span class="omni-badge" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border-color: rgba(16, 185, 129, 0.3);">
+            <span class="ai-pulse-dot"></span> AUTO-GRADING
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+    st.caption("Active diagnostic questions with instant scoring, rationale verification, and knowledge retention feedback.")
     
     if "quiz_answers" not in st.session_state:
         st.session_state.quiz_answers = {}

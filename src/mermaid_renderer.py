@@ -2,7 +2,7 @@
 import streamlit.components.v1 as components
 
 def render_mermaid_svg(mermaid_code: str, height: int = 380):
-    """Renders a Mermaid diagram as an interactive, SVG diagram matching Figma dark tokens."""
+    """Renders a Mermaid diagram as an interactive SVG matching the advanced AI theme."""
     html_code = f"""
     <!DOCTYPE html>
     <html>
@@ -10,18 +10,24 @@ def render_mermaid_svg(mermaid_code: str, height: int = 380):
       <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
       <style>
         body {{
-          background-color: #111a25;
+          background: rgba(11, 14, 22, 0.7);
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           margin: 0;
-          padding: 10px;
+          padding: 16px;
           display: flex;
           justify-content: center;
           align-items: center;
-          color: #f5fafd;
-          font-family: 'Inter', sans-serif;
+          color: #F8FAFC;
+          font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }}
         .mermaid {{
           width: 100%;
           text-align: center;
+        }}
+        .mermaid svg {{
+          filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.15));
         }}
       </style>
     </head>
@@ -35,13 +41,15 @@ def render_mermaid_svg(mermaid_code: str, height: int = 380):
           theme: 'dark',
           themeVariables: {{
             darkMode: true,
-            background: '#111a25',
-            primaryColor: '#29434b',
-            primaryTextColor: '#f5fafd',
-            primaryBorderColor: '#65dbd0',
-            lineColor: '#65dbd0',
-            secondaryColor: '#1d2d3c',
-            tertiaryColor: '#111a25'
+            background: 'transparent',
+            primaryColor: '#1E1B4B',
+            primaryTextColor: '#F8FAFC',
+            primaryBorderColor: '#6366F1',
+            lineColor: '#38BDF8',
+            secondaryColor: '#0F172A',
+            tertiaryColor: '#020617',
+            edgeLabelBackground: '#0F172A',
+            nodeBorder: '#818CF8'
           }}
         }});
       </script>
