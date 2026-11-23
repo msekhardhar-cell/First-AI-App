@@ -12,12 +12,6 @@ from src.ai_engine import stream_ai_response
 from src.model_scanner import scan_free_models
 from src.mermaid_renderer import render_mermaid_svg
 from src.code_runner import execute_python_code
-from src.floral_imprints import (
-    CELESTIAL_LOTUS_SVG, 
-    GEOMETRIC_ROSETTE_SVG, 
-    BOTANICAL_FLOURISH_SVG, 
-    ALL_3D_IMPRINTS
-)
 
 # Page Configuration
 st.set_page_config(
@@ -167,27 +161,22 @@ badge_class = 'sandbox' if is_sandbox_active else ''
 
 st.markdown(f"""
 <div class="omni-header">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <div style="width: 48px; height: 48px; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4));">
-            {CELESTIAL_LOTUS_SVG}
-        </div>
-        <div>
-            <h1 class="omni-title">
-                <span style="background: linear-gradient(135deg, #6366F1, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✦</span>
-                OmniChat
-                <span style="font-size: 11px; font-weight: 700; color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.35); padding: 2px 8px; border-radius: 9999px; vertical-align: middle; background: rgba(99, 102, 241, 0.1);">AI STUDIO</span>
-            </h1>
-            <p style="margin: 0.25rem 0 0 0; color: #94A3B8; font-size: 0.85rem; font-weight: 500;">
-                Next-Gen Multi-Model Battle Arena, Live Artifact Canvas & Free Open Inference Scanner
-            </p>
-        </div>
+    <div>
+        <h1 class="omni-title">
+            <span style="background: linear-gradient(135deg, #6366F1, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✦</span>
+            OmniChat
+            <span class="omni-studio-tag">AI STUDIO</span>
+        </h1>
+        <p class="omni-subtitle">
+            Next-Gen Multi-Model Battle Arena, Live Artifact Canvas & Free Open Inference Scanner
+        </p>
     </div>
-    <div style="display: flex; gap: 0.6rem; align-items: center;">
+    <div class="omni-header-badges">
         <span class="omni-badge {badge_class}">
             <span class="ai-pulse-dot"></span>
             {header_mode_badge}
         </span>
-        <span class="omni-badge" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); color: #E2E8F0;">
+        <span class="omni-badge persona-badge">
             👤 {current_persona['name']}
         </span>
     </div>
@@ -195,52 +184,19 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Action Row
-col_head_left, col_btn_imp, col_btn_quiz = st.columns([2.4, 1.1, 1.1])
+col_head_left, col_head_right = st.columns([3, 1])
 with col_head_left:
     st.markdown("""
-    <span class="metric-pill">🌸 3D Floral Imprints</span>
+    <span class="metric-pill">🌸 3D Floral Wallpaper</span>
     <span class="metric-pill">✨ Figma AI Dark System</span>
     <span class="metric-pill">⚡ Dual Stream LPUs</span>
     <span class="metric-pill">📐 Live SVG Canvas</span>
     """, unsafe_allow_html=True)
-with col_btn_imp:
-    imprint_button_label = "Hide Imprints" if st.session_state.show_imprints else "🌸 3D Imprints"
-    if st.button(imprint_button_label, use_container_width=True):
-        st.session_state.show_imprints = not st.session_state.show_imprints
-        st.rerun()
-with col_btn_quiz:
+with col_head_right:
     quiz_button_label = "Close Quiz" if st.session_state.show_quiz else "🎯 Launch Quiz"
     if st.button(quiz_button_label, use_container_width=True):
         st.session_state.show_quiz = not st.session_state.show_quiz
         st.rerun()
-
-# 3D Floral Imprint Showcase Drawer
-if st.session_state.show_imprints:
-    with st.container():
-        st.markdown("""
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-            <h3 style="margin: 0; color: #F8FAFC; font-size: 1.25rem;">🌸 Sculptural 3D Flowery Imprint Showcase</h3>
-            <span class="imprint-badge-3d">
-                <span class="ai-pulse-dot"></span> 3 SCULPTED 3D EMBLEMS ACTIVE
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
-        st.caption("Tactile 3D debossed and embossed floral imprints with specular highlights and dimensional bevels:")
-        
-        col_imp1, col_imp2, col_imp3 = st.columns(3)
-        for col, imp in zip([col_imp1, col_imp2, col_imp3], ALL_3D_IMPRINTS):
-            with col:
-                st.markdown(f"""
-                <div class="imprint-card-3d" style="text-align: center; border-top: 3px solid {imp['accent']};">
-                    <span style="font-size: 10px; font-weight: 700; color: {imp['accent']}; letter-spacing: 0.05em; text-transform: uppercase;">{imp['tag']}</span>
-                    <h4 style="margin: 0.35rem 0 0.75rem 0; color: #F8FAFC; font-size: 1.05rem;">{imp['name']}</h4>
-                    <div style="width: 140px; height: 140px; margin: 0 auto 0.75rem auto;">
-                        {imp['svg']}
-                    </div>
-                    <p style="font-size: 0.8rem; color: #94A3B8; margin: 0; line-height: 1.4;">{imp['desc']}</p>
-                </div>
-                """, unsafe_allow_html=True)
-        st.divider()
 
 # Free Models Drawer
 if st.session_state.show_scanner:
@@ -281,23 +237,8 @@ def extract_artifact(text: str):
 
 # Workspace View
 if is_battle:
-    st.markdown(f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; background: rgba(16, 20, 32, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; margin-bottom: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.85rem;">
-            <div style="width: 38px; height: 38px; filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.4));">
-                {BOTANICAL_FLOURISH_SVG}
-            </div>
-            <div>
-                <h3 style="margin: 0; color: #F8FAFC; font-size: 1.15rem;">⚔️ Dual-Model Battle Arena</h3>
-                <p style="margin: 0; color: #94A3B8; font-size: 0.8rem;">Parallel token streaming with dimensional 3D evaluation</p>
-            </div>
-        </div>
-        <span class="imprint-badge-3d" style="background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.3); color: #FDA4AF;">
-            <span class="ai-pulse-dot" style="background-color: #F43F5E; box-shadow: 0 0 8px #F43F5E;"></span> 3D BOTANICAL CREST
-        </span>
-    </div>
-    """, unsafe_allow_html=True)
-    st.caption("Submit a prompt to stream answers from both models in parallel:")
+    st.markdown("### ⚔️ Dual-Model Battle Arena")
+    st.caption("Submit a prompt to stream answers from both models in parallel with real-time latency tracking:")
     
     battle_input = st.chat_input("Enter a prompt to compare both models...")
     
@@ -454,13 +395,11 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
         else:
-            st.markdown(f"""
-            <div style="text-align: center; padding: 1.25rem 0.5rem; background: rgba(16, 20, 32, 0.4); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 16px; margin-bottom: 1rem;">
-                <div style="width: 120px; height: 120px; margin: 0 auto 0.75rem auto; filter: drop-shadow(0 4px 14px rgba(6, 182, 212, 0.35));">
-                    {GEOMETRIC_ROSETTE_SVG}
-                </div>
-                <strong style="color: #F8FAFC; font-size: 0.95rem;">3D Guilloché Floral Rosette</strong>
-                <p style="color: #94A3B8; font-size: 0.8rem; margin: 0.25rem 0 0 0;">Interactive system diagrams and executable code will render here live as you chat.</p>
+            st.markdown("""
+            <div style="text-align: center; padding: 1.5rem 1rem; background: rgba(16, 20, 32, 0.4); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 16px; margin-bottom: 1rem;">
+                <span style="font-size: 2rem;">📐</span>
+                <h4 style="color: #F8FAFC; margin: 0.5rem 0 0.25rem 0; font-size: 1rem;">Studio Artifact Canvas</h4>
+                <p style="color: #94A3B8; font-size: 0.8rem; margin: 0;">Interactive system diagrams and executable code will render here live as you chat.</p>
             </div>
             """, unsafe_allow_html=True)
             sample_mermaid = """flowchart TD
