@@ -11,7 +11,7 @@ Developer: msekhardhar-cell (msekhar.dhar@gmail.com)
 ## Submission Details
 
 ### Project Title
-OmniChat: Dual-Model Comparison, Artifact Canvas, and Free Model Scanner
+OmniChat: Dual-Model Arena, Artifact Canvas & Scanner
 
 ### Elevator Pitch
 A fast chat interface with side-by-side model comparison, an artifact canvas for code and diagrams, interactive quizzes, and an auto-scanner for free models.
