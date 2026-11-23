@@ -40,18 +40,18 @@ I wanted to build a workspace that handles these problems directly:
 OmniChat provides four main tools:
 
 - Side-by-side Model Battle: Pick two models (for example, Gemini Flash and an open-weights model from Nous Portal), send a prompt, and watch both stream responses at the same time. The app tracks completion time and lets you vote on the better answer.
-- Artifact Canvas: When a response includes a system architecture diagram or code block, the canvas extracts it into a dedicated side panel and renders interactive Mermaid.js diagrams with one-click export.
+- Artifact Canvas: When a response includes a system architecture diagram or code block, the canvas extracts it into a dedicated side panel, renders interactive Mermaid.js SVG diagrams with one-click export, and allows live in-canvas Python code execution with terminal output.
 - Free Model Scanner: The app queries open inference endpoints (including Nous Portal) to find currently active zero-cost models and lists their context windows and IDs.
 - Interactive Study Quiz: Click a button on any topic to generate a self-grading multiple-choice quiz with immediate answer feedback and score tracking.
 - Context Ingestion: Upload code files, markdown, text, or PDFs to chat directly against your documents.
 - Personas: Switch between general assistance, software architecture reviews, study tutoring, and brief summaries.
-- Offline Sandbox: Pre-loaded responses so evaluators can test the entire interface and feature set without needing their own API keys.
+- Offline Sandbox: Pre-loaded responses and context-aware fallback so evaluators can test the entire interface and feature set without needing their own API keys.
 
 ### How I Built It
-- Interface: Python with Streamlit. I used custom CSS for an obsidian dark theme, card borders, and responsive split columns.
-- Model Layer: A unified streaming handler supporting Google Gemini 2.5 Flash (`google-genai`), Nous Portal models (`httpx` streaming SSE), and Groq.
+- Interface: Python with Streamlit. I used custom CSS for an obsidian dark theme, card borders, and responsive split columns matching the project Figma design tokens.
+- Model Layer: A unified streaming handler supporting Google Gemini 2.5 Flash (`google-genai`), Groq LPUs (`qwen/qwen3.8-27b` and `openai/gpt-oss-120b`), and Nous Portal models (`httpx` streaming SSE).
 - Document Parsing: PyPDF for PDF extraction, plus standard UTF-8 file readers for code and text files.
-- Diagrams: Mermaid.js parsing to extract diagram code blocks and render them directly in the canvas.
+- Diagrams & Execution: Mermaid.js parsing to extract diagram code blocks and render interactive SVGs directly in the canvas, plus sandboxed Python subprocess execution.
 
 ### Challenges
 - Dual Streaming in Streamlit: Running two live token streams side-by-side in real time required careful container management so both response boxes updated smoothly.
@@ -64,9 +64,9 @@ OmniChat provides four main tools:
 - Designing practical educational tools (instant quiz grading) that fit into everyday study routines.
 
 ### What Is Next
-- Adding in-browser Python execution in the canvas so generated scripts can run directly in the page.
-- Adding speech-to-text input.
 - Local SQLite caching for conversation search and history management.
+- Multi-file workspace project exports.
+- Speech-to-text input integration.
 
 ---
 
