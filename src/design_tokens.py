@@ -302,6 +302,51 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 12px !important;
     color: #E2E8F0 !important;
 }
+
+/* --------------------------------------------------------------------------
+   9. 3D Flowery Imprint & Sculptural Debossed Styling
+   -------------------------------------------------------------------------- */
+.imprint-card-3d {
+    position: relative;
+    background: rgba(16, 20, 32, 0.65) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 18px !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 
+        inset 1px 1px 1.5px rgba(255, 255, 255, 0.18),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.8),
+        0 10px 30px -4px rgba(0, 0, 0, 0.6) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    overflow: hidden;
+}
+.imprint-card-3d:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(129, 140, 248, 0.45) !important;
+    box-shadow: 
+        inset 1px 1px 2px rgba(255, 255, 255, 0.25),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.8),
+        0 16px 40px -4px rgba(99, 102, 241, 0.3) !important;
+}
+
+.imprint-badge-3d {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 9999px !important;
+    padding: 0.35rem 0.85rem !important;
+    box-shadow: 
+        inset 1px 1px 1px rgba(255, 255, 255, 0.2),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.7),
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    color: #E2E8F0 !important;
+}
 </style>
 """
 
